@@ -66,7 +66,7 @@ class Connection(object):
     any other mode including blank (None) thereby explicitly clearing the SQL mode.
     """
     def __init__(self, host, database, user=None, password=None,
-                 max_idle_time=7 * 3600, connect_timeout=0, 
+                 max_idle_time=7 * 3600, connect_timeout=0,
                  time_zone="+0:00", charset = "utf8", sql_mode="TRADITIONAL"):
         self.host = host
         self.database = database
@@ -237,6 +237,43 @@ class Connection(object):
             self.close()
             raise
 
+
+class PreparedStatement:
+    """ A class providing an Java-like interface to MySQL Prepared Statements """
+    def __init__(self, db, query):
+        self._db = db
+        self._query = query
+        self._cursor = self._db.cursor(prepared=True)
+        self._params = []
+
+    def bind(self, param):
+        self._params.append(param)
+        return self
+
+    def bind_int(self, param):
+        return self.bind(int(param))
+
+    def bind_float(self, param):
+        return self.bind(float(param))
+
+    def bind_string(self, param):
+        return self.bind(str(param))
+
+    def set(self, pos, param):
+        self._params[pos] = param
+        return self
+
+    def set_int(self, pos, param):
+        return self.set(pos, int(param))
+
+    def set_float(self, pos, param):
+        return self.set(pos, float(param))
+
+    def set_string(self, pos, param):
+        return self.set(pos, str(param))
+
+    def execute(self):
+        return self._cursor.execute(query, tuple(_params))
 
 class Row(dict):
     """A dict that allows for object-like property access syntax."""
